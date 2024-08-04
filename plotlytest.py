@@ -37,7 +37,7 @@ fig.add_trace(go.Scatter(x=Nr[1:], y=G[1:,3], mode='lines', name='verðtr. jafna
 fig.add_trace(go.Scatter(x=Nr[1:], y=A[1:,0], mode='lines', name='óverðtr. jafnar gr.'), row=2, col=1)
 fig.add_trace(go.Scatter(x=Nr[1:], y=A[1:,1], mode='lines', name='óverðtr. jafnar afb.'), row=2, col=1)
 fig.add_trace(go.Scatter(x=Nr[1:], y=A[1:,2], mode='lines', name='verðtr. jafnar gr.'), row=2, col=1)
-fig.add_trace(go.Scatter(x=Nr[1:], y=A[1:], mode='lines', name='verðtr. jafnar afb.'), row=2, col=1)
+fig.add_trace(go.Scatter(x=Nr[1:], y=A[1:,3], mode='lines', name='verðtr. jafnar afb.'), row=2, col=1)
 
 fig.add_trace(go.Scatter(x=Nr[1:], y=V[1:,0], mode='lines', name='óverðtr. jafnar gr.'), row=2, col=2)
 fig.add_trace(go.Scatter(x=Nr[1:], y=V[1:,1], mode='lines', name='óverðtr. jafnar afb.'), row=2, col=2)
@@ -51,53 +51,38 @@ fig.update_layout(
     showlegend=False
 )
 
-# Function to update graph
-def create_update_figure(H, rN, rR, ir, L):
-    G, A, V, Eeg, Nr = update_loan_data(H, rN, rR, ir, L)
-    new_data = [
+# Create slider steps
+H_slider = [
+    dict(
+        label=f'{i*1000000}',
+        method='update',
+        args=[{'visible': [False] * len(fig.data)}]
+    )
+    for i in range(5, 61)
+]
+
+for i, step in enumerate(H_slider):
+    # Update each step with the corresponding data visibility and create a new data set
+    H_value = (i + 5) * 1000000
+    G, A, V, Eeg, Nr = update_loan_data(H_value, rN, rR, ir, L)
+    
+    step['args'][0]['visible'] = [True] * len(fig.data)
+    step['args'][0]['x'] = [Nr] * len(fig.data)
+    step['args'][0]['y'] = [
         Eeg[:,0], Eeg[:,1], Eeg[:,2], Eeg[:,3],
         G[1:,0], G[1:,1], G[1:,2], G[1:,3],
         A[1:,0], A[1:,1], A[1:,2], A[1:,3],
         V[1:,0], V[1:,1], V[1:,2], V[1:,3]
     ]
-    return new_data
 
-# Sliders
-sliders = [
-    dict(
-        active=0,
-        currentvalue={"prefix": "H: "},
-        pad={"t": 50},
-        steps=[dict(label=f'{i*1000000}', method='update', args=[{'args': [create_update_figure(i*1000000, rN, rR, ir, L)], 'mode': 'immediate', 'frame': {'duration': 0, 'redraw': True}}]) for i in range(5, 61)]
-    ),
-    #dict(
-    #   active=0,
-    #    currentvalue={"prefix": "ir: "},
-    #    pad={"t": 50},
-    #    steps=[dict(label=f'{i}', method='update', args=[{'args': [create_update_figure(H, rN, rR, i, L)], 'mode': 'immediate', 'frame': {'duration': 0, 'redraw': True}}]) for i in range(0, 11)]
-    #),
-    #dict(
-    #    active=0,
-    #    currentvalue={"prefix": "rN: "},
-    #    pad={"t": 50},
-    #    steps=[dict(label=f'{i}', method='update', args=[{'args': [create_update_figure(H, i, rR, ir, L)], 'mode': 'immediate', 'frame': {'duration': 0, 'redraw': True}}]) for i in range(1, 11)]
-    #),
-    #dict(
-    #    active=0,
-    #    currentvalue={"prefix": "rR: "},
-    #    pad={"t": 50},
-    #    steps=[dict(label=f'{i/10}', method='update', args=[{'args': [create_update_figure(H, rN, i/10, ir, L)], 'mode': 'immediate', 'frame': {'duration': 0, 'redraw': True}}]) for i in range(1, 101)]
-    #),
-    #dict(
-    #    active=0,
-    #    currentvalue={"prefix": "L: "},
-    #    pad={"t": 50},
-    #    steps=[dict(label=f'{i}', method='update', args=[{'args': [create_update_figure(H, rN, rR, ir, i)], 'mode': 'immediate', 'frame': {'duration': 0, 'redraw': True}}]) for i in range(5, 41)]
-    #)
-]
-
+# Add slider to the layout
 fig.update_layout(
-    sliders=sliders
+    sliders=[{
+        'active': 0,
+        'currentvalue': {"prefix": "H: "},
+        'pad': {"t": 50},
+        'steps': H_slider
+    }]
 )
 
 # Save and open in browser
